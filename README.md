@@ -1,83 +1,120 @@
-# Isio Developer Technical Test
+# Gilded Rose Refactoring Exercise
 
-This test revolves around a refactoring excercise called The Gilded Rose.
+## Overview
 
-It can be completed in any of the following programming languages:
-- C#
-- JavaScript
-- PHP
-- Python
-- TypeScript
-- Visual Basic
+This project is a refactored version of the classic Gilded Rose kata. The original implementation consisted of a single method containing deeply nested conditional logic, which made it difficult to maintain, extend, and reason about.
 
+The goal of this refactor was to improve readability, maintainability, and extensibility while keeping all existing behaviour intact and introducing an additional feature to demonstrate flexibility of the design.
 
-## How to complete the test
+---
 
-Download the code in this repository and complete the test using your programming language of choice.
-For each language, there is a unit test file and an example simulation program to help get you started.
+## Approach
 
-When your solution is ready, send us the link to your submission (e.g. public Github repository or similar). 
-Don't forget to include any additional instructions on how to build or run your solution, especially if you have introduced any new frameworks.
+Coming into this, I wanted to focus on improving the structure of the existing logic without over-engineering the solution. The original `UpdateQuality` method contained multiple branching conditions tied to item names, which made it fragile and difficult to extend safely.
 
-⚠️ Please do not submit PRs with test solutions directly against this source repository! They will be rejected.
+To address this, I applied the **Strategy Pattern**, which I’m familiar with from previous work where we’ve used it to isolate varying business rules behind a common interface.
 
-As the task is refactoring based, a solution is widley open to developer interpretation and offers the opportunity for a candidate to showcase their broader skillset. 
+---
 
-There is no *correct* solution as such. Instead, you may be invited to justify your solution based on your approach and the technical design decisions you have made. You are welcome to include a new README file with your submission to assist with justification of your work.
+## Key Refactoring Decisions
 
-Feel free to go above and beyond the initial requirements specification if desired. For example, you may think of an additional requirement and illustrate how your refactored code allows you to implement this efficiently.
+### 1. Strategy Pattern for Item Behaviour
 
-You can spend as long as you like working on your submission, however a typical solution should take no more than 2-3 hours.
+Each item type now has its own dedicated implementation of `IItemUpdater`, responsible for handling its own update logic.
 
-## Gilded Rose Requirements Specification
+This removes the need for large conditional blocks and makes each behaviour:
+- Easier to understand
+- Easier to test
+- Safe to extend without affecting existing logic
 
-Hi and welcome to team Gilded Rose. As you may already know, we are a small inn with a prime location in a
-prominent city ran by a friendly innkeeper. We also buy and sell only the finest goods.
-Unfortunately, our goods are constantly degrading in `Quality` as they approach their sell by date.
+Example implementations:
+- `NormalItemUpdater`
+- `AgedBrieUpdater`
+- `BackstagePassesUpdater`
+- `ConjuredItemUpdater`
+- `SulfurasUpdater`
+- `LuxuryItemUpdater`
 
-We have a system in place that updates our inventory for us, however its codebase is very basic and is becoming increasingly difficult for us to maintain when we want to add or update functionality. 
+---
 
-Your task is to improve the quality of our codebase, and also add a new feature to our system so that we can begin selling a new category of items. First an introduction to our system:
+### 2. Factory for Resolution
 
-- All `items` have a `SellIn` value which denotes the number of days we have to sell the `items`
-- All `items` have a `Quality` value which denotes how valuable the item is
-- At the end of each day our system lowers both values for every item
+An `ItemUpdaterFactory` is used to resolve the correct updater based on the item name.
 
-Pretty simple, right? Well this is where it gets interesting:
+Due to the constraint that the `Item` class could not be modified, string-based matching was used as a practical solution.
 
-- Once the sell by date has passed, `Quality` degrades twice as fast
-- The `Quality` of an item is never negative
-- __"Aged Brie"__ actually increases in `Quality` the older it gets
-- The `Quality` of an item is never more than `40`
-- __"Sulfuras"__, being a legendary item, never has to be sold or decreases in `Quality`
-- __"Backstage passes"__, like aged brie, increases in `Quality` as its `SellIn` value approaches;
-	- `Quality` increases by `3` when there are `7` days or less and by `4` when there are `2` days or less but
-	- `Quality` drops to `0` after the concert
+In a real-world system, I would prefer a more strongly typed approach (e.g. enum or dedicated item model) to avoid reliance on string matching.
 
-We have recently signed a supplier of conjured items. This requires an update to our system:
+---
 
-- __"Conjured"__ items degrade in `Quality` twice as fast as normal items
+### 3. Shared Quality Logic
 
-Feel free to make any changes to the `UpdateQuality` method and add any new code as long as everything
-still works correctly. However, you must __NOT__ alter the `Item` class or any of its properties.
+A `QualityHelper` was introduced to centralise logic around quality constraints:
 
-## Submission Review
-We are looking for candidates to successfully demonstrate the following criteria to be progressed to the stage in our application process:
-1. Have shown an understanding and appreciation for the rules of the test
-2. Solution compiles and/or runs on all assessor machines (using any additional and reasonable instructions provided) 
-3. Have successfully implemented the new feature request
-4. Demonstrated a clear attempt at code refactoring
-5. Demonstrated a clear understanding of software testing
-6. Solution contains few or zero bugs
-7. Solution does NOT contain evidence of over-reliance on AI (please refrain from doing this, we are looking to assess your own skills and potential. Submissions that show over-reliance on AI will not be progressed) 
-8. Solution does NOT contain signs of private, plagiarised, inappropriate or malicious material
-9. Demonstrated technical capability in their submission, assessed through the following areas:
-	1. Readability
-	2. Maintainability
-	3. Complexity
-	4. Performance 
-	5. Any documented design decision justifications
+- Quality never exceeds the maximum limit
+- Quality never drops below zero
 
+This avoids duplication across updater classes and ensures consistency of business rules.
 
-## Credits
-The test source code is forked and adapted from the public original, which can be found here: https://github.com/emilybache/GildedRose-Refactoring-Kata 
+---
+
+### 4. Separation of Concerns
+
+The original `Program.cs` was responsible for both data setup and execution logic.
+
+While this was left intact for the purposes of the kata, in a production system I would move item creation and initialisation into a separate service or data layer to keep the entry point focused purely on orchestration.
+
+---
+
+## Testing Strategy
+
+The solution is fully covered with unit tests, including:
+
+- Individual updater behaviour tests
+- Factory resolution tests
+- End-to-end system tests via `GildedRose`
+- Edge cases such as quality boundaries (0 and max limits)
+
+This ensures confidence that refactoring has not changed expected behaviour.
+
+---
+
+## Extension Beyond Requirements
+
+To demonstrate extensibility, I added a new item type:
+
+### Luxury Items
+Luxury items degrade in a controlled manner with a defined minimum quality threshold. This demonstrates how new business rules can be introduced without modifying existing logic.
+
+---
+
+## Additional Extension Ideas
+
+If this system were to evolve further, there are a few directions I would consider:
+
+- **Perishable / Shelf-Stable Items**
+  Items that degrade at different rates based on time intervals (e.g. every 2 days rather than daily). This was intentionally not implemented to avoid overcomplicating the solution but would fit naturally into the current structure.
+
+- **Rule-driven item configuration**
+  Instead of relying on string matching, item behaviour could be driven by configuration or metadata, removing the need for factory branching logic entirely.
+
+---
+
+## Trade-offs
+
+- String matching was used due to the constraint of not modifying the `Item` class
+- A factory pattern introduces a small amount of abstraction overhead but significantly improves maintainability and clarity
+- Some logic (such as item initialisation in `Program.cs`) could be further separated in a production-grade architecture
+
+---
+
+## Summary
+
+Overall, this refactor focuses on:
+
+- Improving readability by removing nested conditionals
+- Increasing maintainability through separation of concerns
+- Making behaviour easy to extend via the Strategy Pattern
+- Improving testability by isolating business rules
+
+The result is a codebase that is significantly easier to reason about and extend while preserving all original functionality.
