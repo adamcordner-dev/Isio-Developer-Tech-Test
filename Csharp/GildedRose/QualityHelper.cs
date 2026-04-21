@@ -2,16 +2,16 @@
 {
     public static class QualityHelper
     {
-        private const int MaxQuality = 40;
-        private const int MinQuality = 0;
+        private const int MaximumQuality = 40;
+        private const int MinimumQuality = 0;
 
         public static void IncreaseQuality(Item item, int amount)
         {
             item.Quality += amount;
 
-            if (item.Quality > MaxQuality)
+            if (item.Quality > MaximumQuality)
             { 
-                item.Quality = MaxQuality;
+                item.Quality = MaximumQuality;
             }
         }
 
@@ -19,9 +19,9 @@
         {
             item.Quality -= amount;
 
-            if (item.Quality < MinQuality)
+            if (item.Quality < MinimumQuality)
             {
-                item.Quality = MinQuality;
+                item.Quality = MinimumQuality;
             }
         }
     }

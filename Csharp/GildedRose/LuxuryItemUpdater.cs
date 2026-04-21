@@ -2,16 +2,14 @@
 {
     public class LuxuryItemUpdater : IItemUpdater
     {
+        private const int MinimumQuality = 10;
+
         public void Update(Item item)
         {
             item.SellIn--;
-            if (item.Quality > 10)
+            if (item.Quality > MinimumQuality)
             {
                 QualityHelper.DecreaseQuality(item, 1);
-            }
-            if (item.Quality < 10)
-            {
-                item.Quality = 10;
             }
         }
     }

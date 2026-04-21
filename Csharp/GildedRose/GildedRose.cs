@@ -4,6 +4,7 @@ namespace GildedRoseKata;
 
 public class GildedRose
 {
+    private readonly ItemUpdaterFactory _itemUpdaterFactory = new ItemUpdaterFactory();
     private readonly IList<Item> _items;
 
     public GildedRose(IList<Item> Items)
@@ -13,11 +14,9 @@ public class GildedRose
 
     public void UpdateQuality()
     {
-        ItemUpdaterFactory itemUpdaterFactory = new ItemUpdaterFactory();
-
         foreach (Item item in _items)
         {
-            IItemUpdater itemUpdater = itemUpdaterFactory.Create(item);
+            IItemUpdater itemUpdater = _itemUpdaterFactory.Create(item);
             itemUpdater.Update(item);
         }
     }
